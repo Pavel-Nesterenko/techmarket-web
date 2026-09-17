@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Оформление заказа — TechMarket</title>
+</head>
+
+<body>
+
+<header>
+    <a href="catalog.html">TechMarket</a>
+
+    <nav>
+        <a href="catalog.html">Каталог</a>
+        <a href="support.html">Поддержка</a>
+        <a href="login.html">Личный кабинет</a>
+        <a href="cart.html">Корзина</a>
+    </nav>
+
+    <form>
+        <label for="search">Поиск товаров</label>
+        <input type="search" id="search" name="search" placeholder="Поиск">
+        <button type="submit">Найти</button>
+    </form>
+</header>
+
+<main>
+
+    <h1>Оформление заказа</h1>
+
+    <form>
+
+        <section>
+            <h2>Контактные данные</h2>
+
+            <p>
+                <label for="name">Имя:</label>
+                <input
+                    type="text"
+                    id="name"
+                    name="name"
+                    placeholder="Имя"
+                    required>
+            </p>
+
+            <p>
+                <label for="phone">Телефон:</label>
+                <input
+                    type="tel"
+                    id="phone"
+                    name="phone"
+                    placeholder="Телефон"
+                    required>
+            </p>
+
+            <p>
+                <label for="email">E-mail:</label>
+                <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    placeholder="E-mail"
+                    required>
+            </p>
+
+            <fieldset>
+                <legend>Способ получения</legend>
+
+                <p>
+                    <input
+                        type="radio"
+                        id="delivery"
+                        name="delivery-method"
+                        value="delivery"
+                        checked>
+
+                    <label for="delivery">Доставка</label>
+                </p>
+
+                <p>
+                    <input
+                        type="radio"
+                        id="pickup"
+                        name="delivery-method"
+                        value="pickup">
+
+                    <label for="pickup">Самовывоз</label>
+                </p>
+            </fieldset>
+
+            <p>
+                <label for="address">Адрес доставки:</label>
+                <input
+                    type="text"
+                    id="address"
+                    name="address"
+                    placeholder="Адрес">
+            </p>
+
+        </section>
+
+        <section>
+            <h2>Ваш заказ</h2>
+
+            <ul>
+                <li>Смарт ТВ приставка × 1 — 4 990 ₽</li>
+                <li>Смарт ТВ приставка × 1 — 4 990 ₽</li>
+            </ul>
+
+            <p>Товары: 9 980 ₽</p>
+            <p>Доставка: Бесплатно</p>
+            <p>Бесплатная доставка при заказе от 8 000 ₽</p>
+
+            <p><strong>К оплате: 9 980 ₽</strong></p>
+
+            <button type="submit">Заказать</button>
+        </section>
+
+    </form>
+
+</main>
+
+</body>
+</html>
