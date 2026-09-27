@@ -4,64 +4,79 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="css/style.css">
     <title>Вход — TechMarket</title>
 </head>
 
 <body>
 
-<header>
-    <a href="catalog.html">TechMarket</a>
+<header class="header">
+    <a class="logo" href="catalog.html">TechMarket</a>
 
-    <nav>
+    <nav class="nav">
         <a href="catalog.html">Каталог</a>
         <a href="support.html">Поддержка</a>
         <a href="login.html">Личный кабинет</a>
         <a href="cart.html">Корзина</a>
     </nav>
 
-    <form>
+    <form class="search">
         <label for="search">Поиск товаров</label>
         <input type="search" id="search" name="search" placeholder="Поиск">
         <button type="submit">Найти</button>
     </form>
 </header>
 
-<main>
+<main class="main">
 
-    <h1>Вход</h1>
+    <div class="auth-container">
 
-    <form>
-        <p>
-            <label for="email">E-mail:</label>
-            <input
-                type="email"
-                id="email"
-                name="email"
-                placeholder="E-mail"
-                required>
-        </p>
+        <section class="auth-card">
 
-        <p>
-            <label for="password">Пароль:</label>
-            <input
-                type="password"
-                id="password"
-                name="password"
-                placeholder="Пароль"
-                required>
-        </p>
+            <h1>Вход</h1>
 
-        <button type="submit">Войти</button>
-    </form>
+            <form class="auth-form">
 
-    <p>
-        Нет аккаунта?
-        <a href="register.html">Зарегистрироваться</a>
-    </p>
+                <div class="form-group">
+                    <label for="email">E-mail:</label>
 
-    <p>
-        <a href="account.html">Перейти в личный кабинет</a>
-    </p>
+                    <input
+                        type="email"
+                        id="email"
+                        name="email"
+                        placeholder="E-mail"
+                        required>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Пароль:</label>
+
+                    <input
+                        type="password"
+                        id="password"
+                        name="password"
+                        placeholder="Пароль"
+                        required>
+                </div>
+
+                <button class="auth-button" type="submit">
+                    Войти
+                </button>
+
+            </form>
+
+            <p class="auth-link">
+                Нет аккаунта?
+                <a href="register.html">Зарегистрироваться</a>
+            </p>
+
+            <p class="auth-link">
+                <a href="account.html">Перейти в личный кабинет</a>
+            </p>
+
+        </section>
+
+    </div>
 
 </main>
 
