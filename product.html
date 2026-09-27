@@ -4,7 +4,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Наши стили -->
     <link rel="stylesheet" href="css/style.css">
+
     <title>Смарт ТВ приставка — TechMarket</title>
 </head>
 
@@ -27,11 +33,12 @@
     </form>
 </header>
 
-<main class="main">
+
+<main class="main container">
 
     <article class="product-page">
 
-        <div class="product-image">
+        <div class="product-image shadow-sm">
             <img src="images/product1.jpeg" alt="Смарт ТВ приставка">
         </div>
 
@@ -50,20 +57,28 @@
             <p class="product-stock">В наличии</p>
 
             <form class="cart-form">
+
                 <label for="quantity">Количество:</label>
 
-                <input type="number"
-                       id="quantity"
-                       name="quantity"
-                       value="1"
-                       min="1">
+                <input
+                    class="form-control"
+                    type="number"
+                    id="quantity"
+                    name="quantity"
+                    value="1"
+                    min="1">
 
-                <button type="submit">Добавить в корзину</button>
+                <button class="btn btn-dark" type="submit">
+                    Добавить в корзину
+                </button>
+
             </form>
 
         </div>
 
-        <section class="product-description">
+
+        <section class="product-description shadow-sm">
+
             <h2>Описание</h2>
 
             <p>
@@ -71,35 +86,47 @@
                 мультимедийного контента и использования приложений
                 на телевизоре.
             </p>
+
         </section>
 
-        <section class="product-specifications">
+
+        <section class="product-specifications shadow-sm">
+
             <h2>Характеристики</h2>
 
-            <table>
+            <table class="table">
+
                 <tbody>
+
                     <tr>
                         <th scope="row">Операционная система</th>
                         <td>Android TV 15</td>
                     </tr>
+
                     <tr>
                         <th scope="row">Процессор</th>
                         <td>Cortex A53</td>
                     </tr>
+
                     <tr>
                         <th scope="row">Оперативная память</th>
                         <td>8 ГБ</td>
                     </tr>
+
                     <tr>
                         <th scope="row">Встроенная память</th>
                         <td>128 ГБ</td>
                     </tr>
+
                     <tr>
                         <th scope="row">Разрешение</th>
                         <td>4K Ultra HD</td>
                     </tr>
+
                 </tbody>
+
             </table>
+
         </section>
 
     </article>

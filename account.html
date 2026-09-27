@@ -4,7 +4,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Наши стили -->
     <link rel="stylesheet" href="css/style.css">
+
     <title>Личный кабинет — TechMarket</title>
 </head>
 
@@ -27,13 +33,15 @@
     </form>
 </header>
 
-<main class="main">
 
-    <h1>Личный кабинет</h1>
+<main class="main container">
+
+    <h1 class="mb-4">Личный кабинет</h1>
 
     <div class="account-layout">
 
-        <section class="account-data">
+        <section class="account-data shadow-sm">
+
             <h2>Личные данные</h2>
 
             <p>
@@ -46,20 +54,23 @@
                 email@gmail.com
             </p>
 
-            <button class="account-button" type="button">
+            <button class="account-button btn btn-dark" type="button">
                 Редактировать данные
             </button>
 
             <p class="logout-link">
                 <a href="login.html">Выйти</a>
             </p>
+
         </section>
 
 
-        <section class="order-history">
+        <section class="order-history shadow-sm">
+
             <h2>История заказов</h2>
 
             <article class="order-card">
+
                 <h3>Заказ №01</h3>
 
                 <p>
@@ -69,19 +80,22 @@
 
                 <p>
                     <strong>Статус:</strong>
-                    Выполнен
+                    <span class="badge text-bg-success">Выполнен</span>
                 </p>
 
                 <h4>Состав заказа</h4>
 
-                <ul>
-                    <li>Смарт ТВ приставка × 1</li>
+                <ul class="list-group mb-3">
+                    <li class="list-group-item">
+                        Смарт ТВ приставка × 1
+                    </li>
                 </ul>
 
                 <p>
                     <strong>Сумма заказа:</strong>
                     4 990 ₽
                 </p>
+
             </article>
 
         </section>

@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
     <title>Каталог — TechMarket</title>
 </head>
@@ -28,86 +29,106 @@
 </header>
 
 
-<main class="main">
+<main class="main container">
 
-    <h1>Каталог товаров</h1>
+    <h1 class="mb-4">Каталог товаров</h1>
 
-    <div class="catalog-layout">
+    <div class="row g-4">
 
         <!-- ФИЛЬТРЫ -->
-        <aside class="filters">
+        <aside class="col-12 col-md-4 col-lg-3">
 
-            <h2>Фильтры</h2>
+            <div class="filters shadow-sm">
 
-            <div class="filter-group">
-                <h3>Категории</h3>
+                <h2>Фильтры</h2>
 
-                <ul>
-                    <li><a href="#">Все товары</a></li>
-                    <li><a href="#">TV Stick</a></li>
-                    <li><a href="#">TV Box</a></li>
-                    <li><a href="#">TV ресивер</a></li>
-                </ul>
-            </div>
+                <div class="filter-group">
+                    <h3>Категории</h3>
 
-            <div class="filter-group">
-                <h3>Цена, ₽</h3>
-
-                <div class="price-fields">
-
-                    <div class="price-field">
-                        <label for="price-from">От</label>
-                        <input type="number"
-                               id="price-from"
-                               name="price-from"
-                               placeholder="0">
-                    </div>
-
-                    <div class="price-field">
-                        <label for="price-to">До</label>
-                        <input type="number"
-                               id="price-to"
-                               name="price-to"
-                               placeholder="10000">
-                    </div>
-
+                    <ul>
+                        <li><a href="#">Все товары</a></li>
+                        <li><a href="#">TV Stick</a></li>
+                        <li><a href="#">TV Box</a></li>
+                        <li><a href="#">TV ресивер</a></li>
+                    </ul>
                 </div>
+
+                <div class="filter-group">
+                    <h3>Цена, ₽</h3>
+
+                    <div class="price-fields">
+
+                        <div class="price-field">
+                            <label for="price-from">От</label>
+                            <input
+                                class="form-control"
+                                type="number"
+                                id="price-from"
+                                name="price-from"
+                                placeholder="0">
+                        </div>
+
+                        <div class="price-field">
+                            <label for="price-to">До</label>
+                            <input
+                                class="form-control"
+                                type="number"
+                                id="price-to"
+                                name="price-to"
+                                placeholder="10000">
+                        </div>
+
+                    </div>
+                </div>
+
             </div>
 
         </aside>
 
 
         <!-- ТОВАРЫ -->
-        <section class="products">
+        <section class="products col-12 col-md-8 col-lg-9">
 
             <h2>Товары</h2>
 
-            <div class="product-grid">
+            <div class="row g-4">
 
-                <article class="product-card">
+                <div class="col-12 col-lg-6">
 
-                    <a href="product.html">
-                        <img src="images/product1.jpeg"
-                             alt="Смарт ТВ приставка">
-                    </a>
+                    <article class="product-card card shadow-sm h-100">
 
-                    <h3>
                         <a href="product.html">
-                            Смарт ТВ приставка
+                            <img
+                                src="images/product1.jpeg"
+                                class="card-img-top"
+                                alt="Смарт ТВ приставка">
                         </a>
-                    </h3>
 
-                    <p>4K Ultra HD, 8/128 ГБ, Android</p>
+                        <div class="card-body">
 
-                    <p class="price">
-                        <strong>4 990 ₽</strong>
-                    </p>
+                            <h3 class="card-title">
+                                <a href="product.html">
+                                    Смарт ТВ приставка
+                                </a>
+                            </h3>
 
-                    <a class="product-button" href="product.html">
-                        Подробнее
-                    </a>
+                            <p class="card-text">
+                                4K Ultra HD, 8/128 ГБ, Android
+                            </p>
 
-                </article>
+                            <p class="price">
+                                <strong>4 990 ₽</strong>
+                            </p>
+
+                            <a class="btn btn-dark" href="product.html">
+                                Подробнее
+                            </a>
+
+                        </div>
+
+                    </article>
+
+                </div>
 
             </div>
 
