@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ru">
 
@@ -42,8 +43,9 @@
 
             <h1>Регистрация</h1>
 
-            <form class="auth-form">
+            <form class="auth-form" id="register-form" novalidate>
 
+                <!-- ИМЯ -->
                 <div class="form-group">
 
                     <label for="name">Имя:</label>
@@ -54,11 +56,18 @@
                         id="name"
                         name="name"
                         placeholder="Имя"
+                        autocomplete="given-name"
                         required>
+
+                    <div
+                        class="invalid-feedback"
+                        id="name-error">
+                    </div>
 
                 </div>
 
 
+                <!-- EMAIL -->
                 <div class="form-group">
 
                     <label for="email">E-mail:</label>
@@ -69,11 +78,18 @@
                         id="email"
                         name="email"
                         placeholder="E-mail"
+                        autocomplete="email"
                         required>
+
+                    <div
+                        class="invalid-feedback"
+                        id="email-error">
+                    </div>
 
                 </div>
 
 
+                <!-- ПАРОЛЬ -->
                 <div class="form-group">
 
                     <label for="password">Пароль:</label>
@@ -84,14 +100,23 @@
                         id="password"
                         name="password"
                         placeholder="Пароль"
+                        autocomplete="new-password"
                         required>
+
+                    <div
+                        class="invalid-feedback"
+                        id="password-error">
+                    </div>
 
                 </div>
 
 
+                <!-- ПОДТВЕРЖДЕНИЕ ПАРОЛЯ -->
                 <div class="form-group">
 
-                    <label for="password-repeat">Повторите пароль:</label>
+                    <label for="password-repeat">
+                        Повторите пароль:
+                    </label>
 
                     <input
                         class="form-control"
@@ -99,12 +124,29 @@
                         id="password-repeat"
                         name="password-repeat"
                         placeholder="Повторите пароль"
+                        autocomplete="new-password"
                         required>
+
+                    <div
+                        class="invalid-feedback"
+                        id="password-repeat-error">
+                    </div>
 
                 </div>
 
 
-                <button class="auth-button btn btn-dark" type="submit">
+                <!-- ОБЩЕЕ СООБЩЕНИЕ -->
+                <div
+                    id="register-message"
+                    class="mb-3"
+                    role="status"
+                    aria-live="polite">
+                </div>
+
+
+                <button
+                    class="auth-button btn btn-dark"
+                    type="submit">
                     Зарегистрироваться
                 </button>
 
@@ -121,6 +163,9 @@
     </div>
 
 </main>
+
+<!-- JavaScript проверки регистрации -->
+<script src="js/register.js"></script>
 
 </body>
 </html>

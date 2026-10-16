@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ru">
 
@@ -42,8 +43,10 @@
 
             <h1>Вход</h1>
 
-            <form class="auth-form">
+            <!-- Форма входа -->
+            <form class="auth-form" id="login-form" novalidate>
 
+                <!-- Электронная почта -->
                 <div class="form-group">
 
                     <label for="email">E-mail:</label>
@@ -56,9 +59,15 @@
                         placeholder="E-mail"
                         required>
 
+                    <div
+                        class="invalid-feedback"
+                        id="email-error">
+                    </div>
+
                 </div>
 
 
+                <!-- Пароль -->
                 <div class="form-group">
 
                     <label for="password">Пароль:</label>
@@ -71,10 +80,26 @@
                         placeholder="Пароль"
                         required>
 
+                    <div
+                        class="invalid-feedback"
+                        id="password-error">
+                    </div>
+
                 </div>
 
 
-                <button class="auth-button btn btn-dark" type="submit">
+                <!-- Сообщение о результате проверки -->
+                <div
+                    id="login-message"
+                    class="mb-3"
+                    role="status"
+                    aria-live="polite">
+                </div>
+
+
+                <button
+                    class="auth-button btn btn-dark"
+                    type="submit">
                     Войти
                 </button>
 
@@ -95,6 +120,9 @@
     </div>
 
 </main>
+
+<!-- JavaScript проверки формы входа -->
+<script src="js/login.js"></script>
 
 </body>
 </html>

@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ru">
 
@@ -40,104 +41,51 @@
 
     <div class="cart-layout">
 
+        <!-- ТОВАРЫ В КОРЗИНЕ -->
         <section class="cart-items">
 
             <h2>Товары в корзине</h2>
 
-            <article class="cart-item shadow-sm">
+            <!-- Товары будут добавляться JavaScript -->
+            <div id="cart-items-list">
 
-                <img src="images/product1.jpeg" alt="Смарт ТВ приставка">
+                <p>Корзина пуста.</p>
 
-                <div class="cart-item-info">
-
-                    <p class="product-category">TV Box</p>
-
-                    <h3>Смарт ТВ приставка</h3>
-
-                    <p>
-                        Цена: <strong>4 990 ₽</strong>
-                    </p>
-
-                    <div class="cart-actions">
-
-                        <label for="quantity-1">Количество:</label>
-
-                        <input
-                            class="form-control"
-                            type="number"
-                            id="quantity-1"
-                            name="quantity-1"
-                            value="1"
-                            min="1">
-
-                        <button class="btn btn-outline-danger" type="button">
-                            Удалить
-                        </button>
-
-                    </div>
-
-                </div>
-
-            </article>
-
-
-            <article class="cart-item shadow-sm">
-
-                <img src="images/product2.jpeg" alt="Смарт ТВ приставка">
-
-                <div class="cart-item-info">
-
-                    <p class="product-category">TV Box</p>
-
-                    <h3>Смарт ТВ приставка</h3>
-
-                    <p>
-                        Цена: <strong>4 990 ₽</strong>
-                    </p>
-
-                    <div class="cart-actions">
-
-                        <label for="quantity-2">Количество:</label>
-
-                        <input
-                            class="form-control"
-                            type="number"
-                            id="quantity-2"
-                            name="quantity-2"
-                            value="1"
-                            min="1">
-
-                        <button class="btn btn-outline-danger" type="button">
-                            Удалить
-                        </button>
-
-                    </div>
-
-                </div>
-
-            </article>
+            </div>
 
         </section>
 
 
+        <!-- ИТОГОВАЯ СТОИМОСТЬ -->
         <section class="cart-summary shadow-sm">
 
             <h2>Итого</h2>
 
-            <p>Товары: 9 980 ₽</p>
+            <p>
+                Товары:
+                <span id="cart-subtotal">0 ₽</span>
+            </p>
 
-            <p>Доставка: Бесплатно</p>
+            <p>
+                Доставка:
+                <span id="cart-delivery">0 ₽</span>
+            </p>
 
             <p class="delivery-info">
                 Бесплатная доставка при заказе от 8 000 ₽
             </p>
 
             <p class="cart-total">
-                <strong>К оплате: 9 980 ₽</strong>
+                <strong>
+                    К оплате:
+                    <span id="cart-total">0 ₽</span>
+                </strong>
             </p>
 
-            <a class="checkout-button btn btn-dark"
-               href="checkout.html">
+            <a
+                class="checkout-button btn btn-dark"
+                href="checkout.html"
+                id="checkout-button">
                 Оформить заказ
             </a>
 
@@ -146,6 +94,9 @@
     </div>
 
 </main>
+
+<!-- JavaScript для работы корзины -->
+<script src="js/cart.js"></script>
 
 </body>
 </html>

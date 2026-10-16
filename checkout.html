@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ru">
 
@@ -38,13 +39,15 @@
 
     <h1 class="mb-4">Оформление заказа</h1>
 
-    <form class="checkout-form">
+    <form class="checkout-form" id="checkout-form" novalidate>
 
         <section class="checkout-data shadow-sm">
 
             <h2>Контактные данные</h2>
 
+            <!-- ИМЯ -->
             <div class="form-group">
+
                 <label for="name">Имя:</label>
 
                 <input
@@ -54,10 +57,15 @@
                     name="name"
                     placeholder="Имя"
                     required>
+
+                <div class="invalid-feedback" id="name-error"></div>
+
             </div>
 
 
+            <!-- ТЕЛЕФОН -->
             <div class="form-group">
+
                 <label for="phone">Телефон:</label>
 
                 <input
@@ -65,12 +73,17 @@
                     type="tel"
                     id="phone"
                     name="phone"
-                    placeholder="Телефон"
+                    placeholder="+7 999 123-45-67"
                     required>
+
+                <div class="invalid-feedback" id="phone-error"></div>
+
             </div>
 
 
+            <!-- EMAIL -->
             <div class="form-group">
+
                 <label for="email">E-mail:</label>
 
                 <input
@@ -78,16 +91,21 @@
                     type="email"
                     id="email"
                     name="email"
-                    placeholder="E-mail"
+                    placeholder="example@mail.ru"
                     required>
+
+                <div class="invalid-feedback" id="email-error"></div>
+
             </div>
 
 
+            <!-- СПОСОБ ПОЛУЧЕНИЯ -->
             <fieldset class="delivery-method">
 
                 <legend>Способ получения</legend>
 
                 <div class="form-check">
+
                     <input
                         class="form-check-input"
                         type="radio"
@@ -99,9 +117,11 @@
                     <label class="form-check-label" for="delivery">
                         Доставка
                     </label>
+
                 </div>
 
                 <div class="form-check">
+
                     <input
                         class="form-check-input"
                         type="radio"
@@ -112,12 +132,14 @@
                     <label class="form-check-label" for="pickup">
                         Самовывоз
                     </label>
+
                 </div>
 
             </fieldset>
 
 
-            <div class="form-group">
+            <!-- АДРЕС -->
+            <div class="form-group" id="address-group">
 
                 <label for="address">Адрес доставки:</label>
 
@@ -126,25 +148,25 @@
                     type="text"
                     id="address"
                     name="address"
-                    placeholder="Адрес">
+                    placeholder="Город, улица, дом">
+
+                <div class="invalid-feedback" id="address-error"></div>
 
             </div>
 
         </section>
 
 
+        <!-- ИНФОРМАЦИЯ О ЗАКАЗЕ -->
         <section class="order-summary shadow-sm">
 
             <h2>Ваш заказ</h2>
 
-            <ul class="list-group mb-4">
+            <!-- Список товаров из корзины -->
+            <ul class="list-group mb-4" id="order-items">
 
                 <li class="list-group-item">
-                    Смарт ТВ приставка × 1 — 4 990 ₽
-                </li>
-
-                <li class="list-group-item">
-                    Смарт ТВ приставка × 1 — 4 990 ₽
+                    Загрузка товаров...
                 </li>
 
             </ul>
@@ -152,22 +174,43 @@
 
             <div class="order-price">
 
-                <p>Товары: 9 980 ₽</p>
+                <p>
+                    Товары:
+                    <span id="order-subtotal">0 ₽</span>
+                </p>
 
-                <p>Доставка: Бесплатно</p>
+                <p>
+                    Доставка:
+                    <span id="order-delivery">0 ₽</span>
+                </p>
 
                 <p class="delivery-info">
                     Бесплатная доставка при заказе от 8 000 ₽
                 </p>
 
                 <p class="cart-total">
-                    <strong>К оплате: 9 980 ₽</strong>
+
+                    <strong>
+                        К оплате:
+                        <span id="order-total">0 ₽</span>
+                    </strong>
+
                 </p>
 
             </div>
 
+            <!-- Общее сообщение -->
+            <div
+                id="order-message"
+                class="mt-3"
+                role="status"
+                aria-live="polite">
+            </div>
 
-            <button class="order-button btn btn-dark" type="submit">
+            <button
+                class="order-button btn btn-dark"
+                type="submit"
+                id="submit-order">
                 Заказать
             </button>
 
@@ -176,6 +219,9 @@
     </form>
 
 </main>
+
+<!-- JavaScript оформления заказа -->
+<script src="js/checkout.js"></script>
 
 </body>
 </html>

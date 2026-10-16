@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ru">
 
@@ -40,12 +41,14 @@
 
     <div class="support-layout">
 
+        <!-- Форма обращения -->
         <section class="support-form-section shadow-sm">
 
             <h2>Связаться с нами</h2>
 
-            <form class="support-form">
+            <form class="support-form" id="support-form" novalidate>
 
+                <!-- Имя -->
                 <div class="form-group">
 
                     <label for="name">Имя:</label>
@@ -58,9 +61,15 @@
                         placeholder="Ваше имя"
                         required>
 
+                    <div
+                        class="invalid-feedback"
+                        id="name-error">
+                    </div>
+
                 </div>
 
 
+                <!-- Электронная почта -->
                 <div class="form-group">
 
                     <label for="email">E-mail:</label>
@@ -73,9 +82,15 @@
                         placeholder="E-mail"
                         required>
 
+                    <div
+                        class="invalid-feedback"
+                        id="email-error">
+                    </div>
+
                 </div>
 
 
+                <!-- Тема обращения -->
                 <div class="form-group">
 
                     <label for="subject">Тема обращения:</label>
@@ -88,9 +103,15 @@
                         placeholder="Тема обращения"
                         required>
 
+                    <div
+                        class="invalid-feedback"
+                        id="subject-error">
+                    </div>
+
                 </div>
 
 
+                <!-- Сообщение -->
                 <div class="form-group">
 
                     <label for="message">Сообщение:</label>
@@ -103,10 +124,26 @@
                         placeholder="Опишите вашу проблему"
                         required></textarea>
 
+                    <div
+                        class="invalid-feedback"
+                        id="message-error">
+                    </div>
+
                 </div>
 
 
-                <button class="support-button btn btn-dark" type="submit">
+                <!-- Результат проверки -->
+                <div
+                    id="support-result"
+                    class="mb-3"
+                    role="status"
+                    aria-live="polite">
+                </div>
+
+
+                <button
+                    class="support-button btn btn-dark"
+                    type="submit">
                     Отправить
                 </button>
 
@@ -115,6 +152,7 @@
         </section>
 
 
+        <!-- Часто задаваемые вопросы -->
         <section class="faq-section shadow-sm">
 
             <h2>Часто задаваемые вопросы</h2>
@@ -160,6 +198,9 @@
     </div>
 
 </main>
+
+<!-- JavaScript формы поддержки -->
+<script src="js/support.js"></script>
 
 </body>
 </html>

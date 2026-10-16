@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ru">
 
@@ -11,7 +12,7 @@
     <!-- Наши стили -->
     <link rel="stylesheet" href="css/style.css">
 
-    <title>Смарт ТВ приставка — TechMarket</title>
+    <title>Товар — TechMarket</title>
 </head>
 
 <body>
@@ -36,27 +37,53 @@
 
 <main class="main container">
 
-    <article class="product-page">
+    <!-- Сообщение, если товар не найден -->
+    <div
+        id="product-error"
+        class="alert alert-danger d-none"
+        role="alert">
+        Товар не найден.
+        <a href="catalog.html">Вернуться в каталог</a>
+    </div>
 
+
+    <article class="product-page" id="product-page">
+
+        <!-- Изображение товара -->
         <div class="product-image shadow-sm">
-            <img src="images/product1.jpeg" alt="Смарт ТВ приставка">
+
+            <img
+                src="images/product1.jpeg"
+                alt="Изображение товара"
+                id="product-image">
+
         </div>
 
+
+        <!-- Информация о товаре -->
         <div class="product-info">
 
-            <p class="product-category">TV Box</p>
+            <p class="product-category" id="product-category">
+                TV Box
+            </p>
 
-            <h1>Смарт ТВ приставка</h1>
+            <h1 id="product-name">
+                Смарт ТВ приставка
+            </h1>
 
-            <p class="product-code">Артикул: TM-001</p>
+            <p class="product-code" id="product-code">
+                Артикул: TM-001
+            </p>
 
             <p class="product-price">
-                <strong>4 990 ₽</strong>
+                <strong id="product-price">4 990 ₽</strong>
             </p>
 
             <p class="product-stock">В наличии</p>
 
-            <form class="cart-form">
+
+            <!-- Добавление товара в корзину -->
+            <form class="cart-form" id="product-cart-form">
 
                 <label for="quantity">Количество:</label>
 
@@ -66,7 +93,9 @@
                     id="quantity"
                     name="quantity"
                     value="1"
-                    min="1">
+                    min="1"
+                    step="1"
+                    required>
 
                 <button class="btn btn-dark" type="submit">
                     Добавить в корзину
@@ -74,14 +103,23 @@
 
             </form>
 
+            <!-- Сообщение о добавлении -->
+            <div
+                id="product-message"
+                class="mt-3"
+                role="status"
+                aria-live="polite">
+            </div>
+
         </div>
 
 
+        <!-- Описание -->
         <section class="product-description shadow-sm">
 
             <h2>Описание</h2>
 
-            <p>
+            <p id="product-description">
                 Смарт ТВ приставка предназначена для просмотра
                 мультимедийного контента и использования приложений
                 на телевизоре.
@@ -90,13 +128,14 @@
         </section>
 
 
+        <!-- Характеристики -->
         <section class="product-specifications shadow-sm">
 
             <h2>Характеристики</h2>
 
             <table class="table">
 
-                <tbody>
+                <tbody id="product-specifications">
 
                     <tr>
                         <th scope="row">Операционная система</th>
@@ -132,6 +171,9 @@
     </article>
 
 </main>
+
+<!-- JavaScript страницы товара -->
+<script src="js/product.js"></script>
 
 </body>
 </html>

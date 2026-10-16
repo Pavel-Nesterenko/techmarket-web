@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ru">
 
@@ -91,44 +92,10 @@
 
             <h2>Товары</h2>
 
-            <div class="row g-4">
+            <!-- Контейнер для динамического вывода товаров -->
+            <div class="row g-4" id="product-list">
 
-                <div class="col-12 col-lg-6">
-
-                    <article class="product-card card shadow-sm h-100">
-
-                        <a href="product.html">
-                            <img
-                                src="images/product1.jpeg"
-                                class="card-img-top"
-                                alt="Смарт ТВ приставка">
-                        </a>
-
-                        <div class="card-body">
-
-                            <h3 class="card-title">
-                                <a href="product.html">
-                                    Смарт ТВ приставка
-                                </a>
-                            </h3>
-
-                            <p class="card-text">
-                                4K Ultra HD, 8/128 ГБ, Android
-                            </p>
-
-                            <p class="price">
-                                <strong>4 990 ₽</strong>
-                            </p>
-
-                            <a class="btn btn-dark" href="product.html">
-                                Подробнее
-                            </a>
-
-                        </div>
-
-                    </article>
-
-                </div>
+                <!-- Карточки товаров создаются JavaScript -->
 
             </div>
 
@@ -137,6 +104,8 @@
     </div>
 
 </main>
+
+<script src="js/catalog.js"></script>
 
 </body>
 </html>
