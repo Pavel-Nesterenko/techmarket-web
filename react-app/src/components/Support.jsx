@@ -1,7 +1,8 @@
 
 import { useState } from 'react';
 
-// Проверка имени
+const API_URL = 'http://localhost:3001';
+
 function validateName(value) {
     const name = value.trim();
 
@@ -12,10 +13,7 @@ function validateName(value) {
     const namePattern =
         /^[A-Za-zА-Яа-яЁё]+(?:[ -][A-Za-zА-Яа-яЁё]+)*$/;
 
-    const lettersOnly = name.replace(
-        /[^A-Za-zА-Яа-яЁё]/g,
-        ''
-    );
+    const lettersOnly = name.replace(/[^A-Za-zА-Яа-яЁё]/g, '');
 
     if (!namePattern.test(name) || lettersOnly.length < 2) {
         return 'Имя должно содержать минимум 2 буквы.';
@@ -24,7 +22,6 @@ function validateName(value) {
     return '';
 }
 
-// Проверка электронной почты
 function validateEmail(value) {
     const email = value.trim();
 
@@ -32,16 +29,13 @@ function validateEmail(value) {
         return 'Введите электронную почту.';
     }
 
-    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-    if (!emailPattern.test(email)) {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
         return 'Введите корректный E-mail.';
     }
 
     return '';
 }
 
-// Проверка темы обращения
 function validateSubject(value) {
     const subject = value.trim();
 
@@ -49,14 +43,13 @@ function validateSubject(value) {
         return 'Введите тему обращения.';
     }
 
-    if (subject.length < 3) {
-        return 'Тема обращения должна содержать минимум 3 символа.';
+    if (subject.length < 3 || subject.length > 200) {
+        return 'Тема обращения должна содержать от 3 до 200 символов.';
     }
 
     return '';
 }
 
-// Проверка сообщения
 function validateMessage(value) {
     const message = value.trim();
 
@@ -64,36 +57,29 @@ function validateMessage(value) {
         return 'Введите текст сообщения.';
     }
 
-    if (message.length < 10) {
-        return 'Сообщение должно содержать минимум 10 символов.';
+    if (message.length < 10 || message.length > 5000) {
+        return 'Сообщение должно содержать от 10 до 5000 символов.';
     }
 
     return '';
 }
 
-// Общая проверка отдельного поля
 function validateField(fieldName, value) {
     switch (fieldName) {
         case 'name':
             return validateName(value);
-
         case 'email':
             return validateEmail(value);
-
         case 'subject':
             return validateSubject(value);
-
         case 'message':
             return validateMessage(value);
-
         default:
             return '';
     }
 }
 
 function Support() {
-
-    // Состояние формы
     const [formData, setFormData] = useState({
         name: '',
         email: '',
@@ -101,16 +87,11 @@ function Support() {
         message: ''
     });
 
-    // Состояние ошибок
     const [errors, setErrors] = useState({});
-
-    // Сообщение о результате
     const [supportResult, setSupportResult] = useState('');
-
-    // Успешность проверки
     const [supportSuccess, setSupportSuccess] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // Изменение полей формы
     function handleChange(event) {
         const { name, value } = event.target;
 
@@ -128,21 +109,24 @@ function Support() {
         setSupportSuccess(false);
     }
 
-    // Проверка после выхода из поля
     function handleBlur(event) {
         const { name, value } = event.target;
 
-        const error = validateField(name, value);
-
         setErrors((previousErrors) => ({
             ...previousErrors,
-            [name]: error
+            [name]: validateField(name, value)
         }));
     }
 
-    // Отправка формы
-    function handleSubmit(event) {
+    async function handleSubmit(event) {
         event.preventDefault();
+
+        if (isSubmitting) {
+            return;
+        }
+
+        setSupportResult('');
+        setSupportSuccess(false);
 
         const newErrors = {
             name: validateName(formData.name),
@@ -153,43 +137,66 @@ function Support() {
 
         setErrors(newErrors);
 
-        const hasErrors = Object.values(newErrors).some(
-            (error) => error !== ''
-        );
-
-        if (hasErrors) {
-            setSupportResult(
-                'Исправьте ошибки в форме обращения.'
-            );
-
-            setSupportSuccess(false);
+        if (Object.values(newErrors).some((error) => error !== '')) {
+            setSupportResult('Исправьте ошибки в форме обращения.');
             return;
         }
 
-        // Демонстрационное подтверждение
-        setSupportResult(
-            'Форма заполнена корректно! ' +
-            'Отправка обращения будет доступна ' +
-            'после подключения сервера.'
-        );
+        setIsSubmitting(true);
 
-        setSupportSuccess(true);
+        try {
+            const response = await fetch(`${API_URL}/api/support`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    name: formData.name.trim(),
+                    email: formData.email.trim(),
+                    subject: formData.subject.trim(),
+                    message: formData.message.trim()
+                })
+            });
 
-        console.log('Проверка формы поддержки пройдена.');
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(
+                    result.message || 'Не удалось отправить обращение.'
+                );
+            }
+
+            setSupportResult(
+                `Обращение №${result.requestId} успешно отправлено!`
+            );
+            setSupportSuccess(true);
+
+            setFormData({
+                name: '',
+                email: '',
+                subject: '',
+                message: ''
+            });
+
+            setErrors({});
+        } catch (error) {
+            setSupportResult(
+                error instanceof TypeError
+                    ? 'Не удалось подключиться к серверу. Проверьте, запущен ли Node.js.'
+                    : error.message
+            );
+            setSupportSuccess(false);
+        } finally {
+            setIsSubmitting(false);
+        }
     }
 
     return (
         <main className="main container">
-
-            <h1 className="mb-4">
-                Поддержка
-            </h1>
+            <h1 className="mb-4">Поддержка</h1>
 
             <div className="support-layout">
-
-                {/* Форма обращения */}
                 <section className="support-form-section shadow-sm">
-
                     <h2>Связаться с нами</h2>
 
                     <form
@@ -198,10 +205,7 @@ function Support() {
                         noValidate
                         onSubmit={handleSubmit}
                     >
-
-                        {/* Имя */}
                         <div className="form-group">
-
                             <label htmlFor="support-name">
                                 Имя:
                             </label>
@@ -223,12 +227,9 @@ function Support() {
                             <div className="invalid-feedback">
                                 {errors.name}
                             </div>
-
                         </div>
 
-                        {/* Электронная почта */}
                         <div className="form-group">
-
                             <label htmlFor="support-email">
                                 E-mail:
                             </label>
@@ -250,12 +251,9 @@ function Support() {
                             <div className="invalid-feedback">
                                 {errors.email}
                             </div>
-
                         </div>
 
-                        {/* Тема обращения */}
                         <div className="form-group">
-
                             <label htmlFor="support-subject">
                                 Тема обращения:
                             </label>
@@ -277,12 +275,9 @@ function Support() {
                             <div className="invalid-feedback">
                                 {errors.subject}
                             </div>
-
                         </div>
 
-                        {/* Сообщение */}
                         <div className="form-group">
-
                             <label htmlFor="support-message">
                                 Сообщение:
                             </label>
@@ -304,10 +299,8 @@ function Support() {
                             <div className="invalid-feedback">
                                 {errors.message}
                             </div>
-
                         </div>
 
-                        {/* Результат проверки */}
                         <div
                             id="support-result"
                             className={`mb-3 ${
@@ -324,57 +317,42 @@ function Support() {
                         <button
                             className="support-button btn btn-dark"
                             type="submit"
+                            disabled={isSubmitting}
                         >
-                            Отправить
+                            {isSubmitting ? 'Отправляем...' : 'Отправить'}
                         </button>
-
                     </form>
-
                 </section>
 
-                {/* Часто задаваемые вопросы */}
                 <section className="faq-section shadow-sm">
-
                     <h2>Часто задаваемые вопросы</h2>
 
                     <article className="faq-item">
-
                         <h3>Как оформить заказ?</h3>
-
                         <p>
                             Добавьте нужный товар в корзину,
                             перейдите в корзину и нажмите
                             «Оформить заказ».
                         </p>
-
                     </article>
 
                     <article className="faq-item">
-
                         <h3>Как узнать статус заказа?</h3>
-
                         <p>
                             Информация о статусе заказа
                             отображается в личном кабинете.
                         </p>
-
                     </article>
 
                     <article className="faq-item">
-
                         <h3>Какие способы получения доступны?</h3>
-
                         <p>
                             При оформлении заказа можно выбрать
                             доставку или самовывоз.
                         </p>
-
                     </article>
-
                 </section>
-
             </div>
-
         </main>
     );
 }

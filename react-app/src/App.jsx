@@ -12,65 +12,7 @@ import Account from './components/Account.jsx';
 
 const CART_STORAGE_KEY = 'techmarket_cart';
 
-// Данные товаров
-const products = [
-    {
-        id: 1,
-        name: 'Смарт ТВ приставка',
-        category: 'TV Box',
-        price: 4990,
-        description: '4K Ultra HD, 8/128 ГБ, Android',
-        image: '/images/product1.jpeg',
-        fullDescription:
-            'Смарт ТВ приставка предназначена для просмотра ' +
-            'мультимедийного контента и использования приложений ' +
-            'на телевизоре.',
-        specifications: {
-            'Операционная система': 'Android TV 15',
-            'Процессор': 'Cortex A53',
-            'Оперативная память': '8 ГБ',
-            'Встроенная память': '128 ГБ',
-            'Разрешение': '4K Ultra HD'
-        }
-    },
-    {
-        id: 2,
-        name: 'Смарт ТВ приставка Mini',
-        category: 'TV Stick',
-        price: 2990,
-        description: 'Full HD, 2/16 ГБ, Android',
-        image: '/images/product2.jpeg',
-        fullDescription:
-            'Компактная смарт ТВ приставка Mini позволяет ' +
-            'смотреть видео и пользоваться приложениями ' +
-            'на телевизоре. Поддерживает разрешение Full HD.',
-        specifications: {
-            'Операционная система': 'Android',
-            'Тип устройства': 'TV Stick',
-            'Оперативная память': '2 ГБ',
-            'Встроенная память': '16 ГБ',
-            'Разрешение': 'Full HD'
-        }
-    },
-    {
-        id: 3,
-        name: 'Цифровой ТВ ресивер',
-        category: 'TV ресивер',
-        price: 1990,
-        description: 'DVB-T2, HDMI, USB',
-        image: '/images/product1.jpeg',
-        fullDescription:
-            'Цифровой ТВ ресивер предназначен для приёма ' +
-            'цифрового эфирного телевидения DVB-T2. ' +
-            'Оснащён разъёмами HDMI и USB.',
-        specifications: {
-            'Стандарт телевидения': 'DVB-T2',
-            'Подключение': 'HDMI',
-            'USB': 'Есть',
-            'Тип устройства': 'Цифровой ТВ ресивер'
-        }
-    }
-];
+const API_PRODUCTS_URL = 'http://localhost:3001/api/products';
 
 // Загрузка корзины из localStorage
 function loadCart() {
@@ -331,6 +273,50 @@ function Filters({
 // Главный компонент приложения
 function App() {
 
+    // Товары теперь загружаются с сервера, а не хранятся в React.
+    const [products, setProducts] = useState([]);
+    const [productsLoading, setProductsLoading] = useState(true);
+    const [productsError, setProductsError] = useState('');
+    const [reloadProducts, setReloadProducts] = useState(0);
+
+    useEffect(() => {
+        const controller = new AbortController();
+
+        async function loadProducts() {
+            setProductsLoading(true);
+            setProductsError('');
+
+            try {
+                const response = await fetch(API_PRODUCTS_URL, {
+                    signal: controller.signal
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+
+                const data = await response.json();
+                if (!Array.isArray(data)) {
+                    throw new Error('Неверный формат списка товаров');
+                }
+
+                setProducts(data);
+            } catch (error) {
+                if (error.name !== 'AbortError') {
+                    console.error('Ошибка загрузки товаров:', error);
+                    setProductsError('Не удалось загрузить товары с сервера. Проверьте, запущен ли Node.js на порту 3001.');
+                }
+            } finally {
+                if (!controller.signal.aborted) {
+                    setProductsLoading(false);
+                }
+            }
+        }
+
+        loadProducts();
+        return () => controller.abort();
+    }, [reloadProducts]);
+
     // Текущая страница
     const [currentPage, setCurrentPage] =
         useState(getPageFromHash);
@@ -574,7 +560,24 @@ function App() {
                                 id="product-list"
                             >
 
-                                {filteredProducts.length > 0 ? (
+                                {productsLoading ? (
+                                    <div className="col-12" role="status">
+                                        <p>Загрузка товаров с сервера...</p>
+                                    </div>
+                                ) : productsError ? (
+                                    <div className="col-12">
+                                        <div className="alert alert-danger" role="alert">
+                                            {productsError}
+                                        </div>
+                                        <button
+                                            type="button"
+                                            className="btn btn-primary"
+                                            onClick={() => setReloadProducts((value) => value + 1)}
+                                        >
+                                            Повторить загрузку
+                                        </button>
+                                    </div>
+                                ) : filteredProducts.length > 0 ? (
 
                                     filteredProducts.map((product) => (
 
@@ -605,7 +608,17 @@ function App() {
             )}
 
             {/* Страница отдельного товара */}
-            {currentPage === 'product' && (
+            {currentPage === 'product' && productsLoading && (
+                <main className="main container"><p>Загрузка товара с сервера...</p></main>
+            )}
+
+            {currentPage === 'product' && productsError && (
+                <main className="main container">
+                    <div className="alert alert-danger" role="alert">{productsError}</div>
+                </main>
+            )}
+
+            {currentPage === 'product' && !productsLoading && !productsError && (
 
                 <Product
                     key={selectedProductId ?? 'unknown'}

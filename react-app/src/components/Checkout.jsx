@@ -1,9 +1,9 @@
 
 import { useState } from 'react';
 
-function Checkout({ cart, onOrderComplete }) {
+const API_URL = 'http://localhost:3001';
 
-    // Состояние полей формы
+function Checkout({ cart, onOrderComplete }) {
     const [formData, setFormData] = useState({
         name: '',
         phone: '',
@@ -12,24 +12,20 @@ function Checkout({ cart, onOrderComplete }) {
         address: ''
     });
 
-    // Ошибки проверки полей
     const [errors, setErrors] = useState({});
-
-    // Сообщение о результате оформления
     const [orderMessage, setOrderMessage] = useState('');
     const [orderSuccess, setOrderSuccess] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // Форматирование цены
     function formatPrice(price) {
         return price.toLocaleString('ru-RU') + ' ₽';
     }
 
-    // Стоимость товаров
-    const subtotal = cart.reduce((sum, product) => {
-        return sum + product.price * product.quantity;
-    }, 0);
+    const subtotal = cart.reduce(
+        (sum, product) => sum + product.price * product.quantity,
+        0
+    );
 
-    // Стоимость доставки
     const delivery =
         subtotal === 0 ||
         formData.deliveryMethod === 'pickup' ||
@@ -39,9 +35,7 @@ function Checkout({ cart, onOrderComplete }) {
 
     const total = subtotal + delivery;
 
-    // Изменение полей формы
     function handleChange(event) {
-
         const { name, value } = event.target;
 
         setFormData((previousData) => ({
@@ -55,26 +49,20 @@ function Checkout({ cart, onOrderComplete }) {
         }));
     }
 
-    // Проверка отдельного поля
     function validateField(fieldName, value) {
-
         const trimmedValue = value.trim();
 
         if (fieldName === 'name') {
-
             if (trimmedValue.length === 0) {
                 return 'Введите имя.';
             }
 
-            const namePattern = /^[A-Za-zА-Яа-яЁё\s-]{2,}$/;
-
-            if (!namePattern.test(trimmedValue)) {
+            if (!/^[A-Za-zА-Яа-яЁё\s-]{2,}$/.test(trimmedValue)) {
                 return 'Имя должно содержать минимум 2 буквы.';
             }
         }
 
         if (fieldName === 'phone') {
-
             const digits = trimmedValue.replace(/\D/g, '');
 
             if (digits.length < 10 || digits.length > 15) {
@@ -83,16 +71,12 @@ function Checkout({ cart, onOrderComplete }) {
         }
 
         if (fieldName === 'email') {
-
-            const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-            if (!emailPattern.test(trimmedValue)) {
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedValue)) {
                 return 'Введите корректный E-mail.';
             }
         }
 
         if (fieldName === 'address') {
-
             if (formData.deliveryMethod === 'pickup') {
                 return '';
             }
@@ -105,27 +89,19 @@ function Checkout({ cart, onOrderComplete }) {
         return '';
     }
 
-    // Проверка поля после потери фокуса
     function handleBlur(event) {
-
         const { name, value } = event.target;
-
-        const error = validateField(name, value);
 
         setErrors((previousErrors) => ({
             ...previousErrors,
-            [name]: error
+            [name]: validateField(name, value)
         }));
     }
 
-    // Выбор способа получения
     function handleDeliveryChange(event) {
-
-        const method = event.target.value;
-
         setFormData((previousData) => ({
             ...previousData,
-            deliveryMethod: method
+            deliveryMethod: event.target.value
         }));
 
         setErrors((previousErrors) => ({
@@ -134,10 +110,12 @@ function Checkout({ cart, onOrderComplete }) {
         }));
     }
 
-    // Отправка заказа
-    function handleSubmit(event) {
-
+    async function handleSubmit(event) {
         event.preventDefault();
+
+        if (isSubmitting) {
+            return;
+        }
 
         setOrderMessage('');
         setOrderSuccess(false);
@@ -151,24 +129,17 @@ function Checkout({ cart, onOrderComplete }) {
 
         setErrors(newErrors);
 
-        const hasErrors = Object.values(newErrors).some(
-            (error) => error !== ''
-        );
-
-        if (hasErrors) {
+        if (Object.values(newErrors).some((error) => error !== '')) {
             setOrderMessage('Исправьте ошибки в форме.');
             return;
         }
 
         if (cart.length === 0) {
-            setOrderMessage(
-                'Невозможно оформить заказ: корзина пуста.'
-            );
+            setOrderMessage('Невозможно оформить заказ: корзина пуста.');
             return;
         }
 
-        // Демонстрационный заказ
-        const order = {
+        const orderData = {
             name: formData.name.trim(),
             phone: formData.phone.trim(),
             email: formData.email.trim(),
@@ -177,41 +148,63 @@ function Checkout({ cart, onOrderComplete }) {
                 formData.deliveryMethod === 'pickup'
                     ? ''
                     : formData.address.trim(),
-            products: cart,
-            subtotal,
-            delivery,
-            total
+            items: cart.map((product) => ({
+                id: product.id,
+                quantity: product.quantity
+            }))
         };
 
-        console.log('Демонстрационный заказ:', order);
+        setIsSubmitting(true);
 
-        setOrderMessage(
-            'Заказ успешно оформлен! Это демонстрационный заказ.'
-        );
+        try {
+            const response = await fetch(`${API_URL}/api/orders`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(orderData)
+            });
 
-        setOrderSuccess(true);
+            const result = await response.json();
 
-        // Очищаем корзину через App
-        onOrderComplete();
+            if (!response.ok) {
+                throw new Error(
+                    result.message || 'Не удалось оформить заказ.'
+                );
+            }
 
-        // Очищаем форму
-        setFormData({
-            name: '',
-            phone: '',
-            email: '',
-            deliveryMethod: 'delivery',
-            address: ''
-        });
+            setOrderMessage(
+                `Заказ №${result.orderId} успешно оформлен! ` +
+                `Сумма: ${formatPrice(result.total)}.`
+            );
+            setOrderSuccess(true);
 
-        setErrors({});
+            // Корзину очищаем только после ответа сервера
+            onOrderComplete();
+
+            setFormData({
+                name: '',
+                phone: '',
+                email: '',
+                deliveryMethod: 'delivery',
+                address: ''
+            });
+
+            setErrors({});
+        } catch (error) {
+            setOrderMessage(
+                error instanceof TypeError
+                    ? 'Не удалось подключиться к серверу. Проверьте, запущен ли Node.js.'
+                    : error.message
+            );
+        } finally {
+            setIsSubmitting(false);
+        }
     }
 
     return (
         <main className="main container">
-
-            <h1 className="mb-4">
-                Оформление заказа
-            </h1>
+            <h1 className="mb-4">Оформление заказа</h1>
 
             <form
                 className="checkout-form"
@@ -219,20 +212,13 @@ function Checkout({ cart, onOrderComplete }) {
                 noValidate
                 onSubmit={handleSubmit}
             >
-
                 <section className="checkout-data shadow-sm">
-
                     <h2>Контактные данные</h2>
 
-                    {/* Имя */}
                     <div className="form-group">
-
                         <label htmlFor="name">Имя:</label>
-
                         <input
-                            className={`form-control ${
-                                errors.name ? 'is-invalid' : ''
-                            }`}
+                            className={`form-control ${errors.name ? 'is-invalid' : ''}`}
                             type="text"
                             id="name"
                             name="name"
@@ -242,22 +228,15 @@ function Checkout({ cart, onOrderComplete }) {
                             onBlur={handleBlur}
                             required
                         />
-
                         <div className="invalid-feedback">
                             {errors.name}
                         </div>
-
                     </div>
 
-                    {/* Телефон */}
                     <div className="form-group">
-
                         <label htmlFor="phone">Телефон:</label>
-
                         <input
-                            className={`form-control ${
-                                errors.phone ? 'is-invalid' : ''
-                            }`}
+                            className={`form-control ${errors.phone ? 'is-invalid' : ''}`}
                             type="tel"
                             id="phone"
                             name="phone"
@@ -267,22 +246,15 @@ function Checkout({ cart, onOrderComplete }) {
                             onBlur={handleBlur}
                             required
                         />
-
                         <div className="invalid-feedback">
                             {errors.phone}
                         </div>
-
                     </div>
 
-                    {/* Email */}
                     <div className="form-group">
-
                         <label htmlFor="email">E-mail:</label>
-
                         <input
-                            className={`form-control ${
-                                errors.email ? 'is-invalid' : ''
-                            }`}
+                            className={`form-control ${errors.email ? 'is-invalid' : ''}`}
                             type="email"
                             id="email"
                             name="email"
@@ -292,82 +264,58 @@ function Checkout({ cart, onOrderComplete }) {
                             onBlur={handleBlur}
                             required
                         />
-
                         <div className="invalid-feedback">
                             {errors.email}
                         </div>
-
                     </div>
 
-                    {/* Способ получения */}
                     <fieldset className="delivery-method">
-
                         <legend>Способ получения</legend>
 
                         <div className="form-check">
-
                             <input
                                 className="form-check-input"
                                 type="radio"
                                 id="delivery"
                                 name="delivery-method"
                                 value="delivery"
-                                checked={
-                                    formData.deliveryMethod === 'delivery'
-                                }
+                                checked={formData.deliveryMethod === 'delivery'}
                                 onChange={handleDeliveryChange}
                             />
-
                             <label
                                 className="form-check-label"
                                 htmlFor="delivery"
                             >
                                 Доставка
                             </label>
-
                         </div>
 
                         <div className="form-check">
-
                             <input
                                 className="form-check-input"
                                 type="radio"
                                 id="pickup"
                                 name="delivery-method"
                                 value="pickup"
-                                checked={
-                                    formData.deliveryMethod === 'pickup'
-                                }
+                                checked={formData.deliveryMethod === 'pickup'}
                                 onChange={handleDeliveryChange}
                             />
-
                             <label
                                 className="form-check-label"
                                 htmlFor="pickup"
                             >
                                 Самовывоз
                             </label>
-
                         </div>
-
                     </fieldset>
 
-                    {/* Адрес отображается только при доставке */}
                     {formData.deliveryMethod === 'delivery' && (
-
-                        <div
-                            className="form-group"
-                            id="address-group"
-                        >
-
+                        <div className="form-group" id="address-group">
                             <label htmlFor="address">
                                 Адрес доставки:
                             </label>
-
                             <input
-                                className={`form-control ${
-                                    errors.address ? 'is-invalid' : ''
-                                }`}
+                                className={`form-control ${errors.address ? 'is-invalid' : ''}`}
                                 type="text"
                                 id="address"
                                 name="address"
@@ -377,37 +325,26 @@ function Checkout({ cart, onOrderComplete }) {
                                 onBlur={handleBlur}
                                 required
                             />
-
                             <div className="invalid-feedback">
                                 {errors.address}
                             </div>
-
                         </div>
-
                     )}
-
                 </section>
 
-                {/* Информация о заказе */}
                 <section className="order-summary shadow-sm">
-
                     <h2>Ваш заказ</h2>
 
                     <ul
                         className="list-group mb-4"
                         id="order-items"
                     >
-
                         {cart.length === 0 ? (
-
                             <li className="list-group-item">
                                 Корзина пуста.
                             </li>
-
                         ) : (
-
                             cart.map((product) => (
-
                                 <li
                                     className="list-group-item"
                                     key={product.id}
@@ -420,15 +357,11 @@ function Checkout({ cart, onOrderComplete }) {
                                         product.price * product.quantity
                                     )}
                                 </li>
-
                             ))
-
                         )}
-
                     </ul>
 
                     <div className="order-price">
-
                         <p>
                             Товары:
                             <span id="order-subtotal">
@@ -457,11 +390,9 @@ function Checkout({ cart, onOrderComplete }) {
                                 </span>
                             </strong>
                         </p>
-
                     </div>
 
                     {orderMessage && (
-
                         <div
                             id="order-message"
                             className={`mt-3 ${
@@ -474,22 +405,18 @@ function Checkout({ cart, onOrderComplete }) {
                         >
                             {orderMessage}
                         </div>
-
                     )}
 
                     <button
                         className="order-button btn btn-dark"
                         type="submit"
                         id="submit-order"
-                        disabled={cart.length === 0}
+                        disabled={cart.length === 0 || isSubmitting}
                     >
-                        Заказать
+                        {isSubmitting ? 'Оформляем...' : 'Заказать'}
                     </button>
-
                 </section>
-
             </form>
-
         </main>
     );
 }
