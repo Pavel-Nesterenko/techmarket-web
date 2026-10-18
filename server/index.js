@@ -1,20 +1,27 @@
 
 const express = require('express');
 const cors = require('cors');
-const products = require('./data/products');
+const pool = require('./db');
 
 const app = express();
 const PORT = 3001;
 
-// Временное хранение данных до подключения базы данных
-const orders = [];
-const supportRequests = [];
-
-let nextOrderId = 1;
-let nextSupportId = 1;
-
 app.use(cors());
 app.use(express.json({ limit: '100kb' }));
+
+// Преобразование товара из PostgreSQL в формат React
+function formatProduct(row) {
+  return {
+    id: row.id,
+    name: row.name,
+    category: row.category,
+    price: Number(row.price),
+    description: row.description,
+    image: row.image,
+    fullDescription: row.full_description,
+    specifications: row.specifications
+  };
+}
 
 // Проверка сервера
 app.get('/', (req, res) => {
@@ -28,27 +35,66 @@ app.get('/api/test', (req, res) => {
   });
 });
 
+// Проверка подключения к PostgreSQL
+app.get('/api/db-test', async (req, res, next) => {
+  try {
+    const result = await pool.query(
+      'SELECT current_database() AS database, NOW() AS server_time'
+    );
+
+    res.json({
+      success: true,
+      message: 'PostgreSQL подключён!',
+      ...result.rows[0]
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 // Получение всех товаров
-app.get('/api/products', (req, res) => {
-  res.json(products);
+app.get('/api/products', async (req, res, next) => {
+  try {
+    const result = await pool.query(
+      'SELECT * FROM products ORDER BY id'
+    );
+
+    res.json(result.rows.map(formatProduct));
+  } catch (error) {
+    next(error);
+  }
 });
 
 // Получение одного товара
-app.get('/api/products/:id', (req, res) => {
-  const id = Number(req.params.id);
-  const product = products.find((item) => item.id === id);
+app.get('/api/products/:id', async (req, res, next) => {
+  try {
+    const id = Number(req.params.id);
 
-  if (!product) {
-    return res.status(404).json({
-      message: 'Товар не найден'
-    });
+    if (!Number.isSafeInteger(id) || id < 1) {
+      return res.status(400).json({
+        message: 'Некорректный ID товара.'
+      });
+    }
+
+    const result = await pool.query(
+      'SELECT * FROM products WHERE id = $1',
+      [id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        message: 'Товар не найден'
+      });
+    }
+
+    res.json(formatProduct(result.rows[0]));
+  } catch (error) {
+    next(error);
   }
-
-  res.json(product);
 });
 
 // Оформление заказа
-app.post('/api/orders', (req, res) => {
+app.post('/api/orders', async (req, res, next) => {
   const data = req.body;
 
   if (!data || typeof data !== 'object' || Array.isArray(data)) {
@@ -114,107 +160,150 @@ app.post('/api/orders', (req, res) => {
     });
   }
 
-  const orderItems = [];
+  let client;
 
-  for (const item of items) {
-    if (
-      !item ||
-      !Number.isSafeInteger(item.id) ||
-      !Number.isSafeInteger(item.quantity) ||
-      item.quantity < 1 ||
-      item.quantity > 100
-    ) {
-      return res.status(400).json({
-        message: 'Некорректное количество или ID товара.'
-      });
-    }
+  try {
+    client = await pool.connect();
+    await client.query('BEGIN');
 
-    const product = products.find(
-      (product) => product.id === item.id
-    );
+    const orderItems = [];
 
-    if (!product) {
-      return res.status(400).json({
-        message: `Товар с ID ${item.id} не найден.`
-      });
-    }
+    for (const item of items) {
+      if (
+        !item ||
+        !Number.isSafeInteger(item.id) ||
+        !Number.isSafeInteger(item.quantity) ||
+        item.quantity < 1 ||
+        item.quantity > 100
+      ) {
+        await client.query('ROLLBACK');
 
-    const existingItem = orderItems.find(
-      (orderItem) => orderItem.id === product.id
-    );
-
-    if (existingItem) {
-      if (existingItem.quantity + item.quantity > 100) {
         return res.status(400).json({
-          message: 'Превышено допустимое количество товара.'
+          message: 'Некорректное количество или ID товара.'
         });
       }
 
-      existingItem.quantity += item.quantity;
-    } else {
-      orderItems.push({
-        id: product.id,
-        name: product.name,
-        price: product.price,
-        quantity: item.quantity
-      });
+      const productResult = await client.query(
+        'SELECT id, name, price FROM products WHERE id = $1',
+        [item.id]
+      );
+
+      if (productResult.rows.length === 0) {
+        await client.query('ROLLBACK');
+
+        return res.status(400).json({
+          message: `Товар с ID ${item.id} не найден.`
+        });
+      }
+
+      const product = productResult.rows[0];
+
+      const existingItem = orderItems.find(
+        (orderItem) => orderItem.id === product.id
+      );
+
+      if (existingItem) {
+        if (existingItem.quantity + item.quantity > 100) {
+          await client.query('ROLLBACK');
+
+          return res.status(400).json({
+            message: 'Превышено допустимое количество товара.'
+          });
+        }
+
+        existingItem.quantity += item.quantity;
+      } else {
+        orderItems.push({
+          id: product.id,
+          name: product.name,
+          price: Number(product.price),
+          quantity: item.quantity
+        });
+      }
+    }
+
+    // Сервер самостоятельно рассчитывает стоимость
+    const subtotal = orderItems.reduce(
+      (sum, item) => sum + item.price * item.quantity,
+      0
+    );
+
+    const delivery =
+      deliveryMethod === 'pickup' || subtotal >= 8000
+        ? 0
+        : 500;
+
+    const total = subtotal + delivery;
+
+    // Сохранение заказа
+    const orderResult = await client.query(
+      `INSERT INTO orders
+        (customer_name, customer_email, customer_phone, total, status)
+       VALUES ($1, $2, $3, $4, $5)
+       RETURNING id`,
+      [
+        name.trim(),
+        email.trim(),
+        phone.trim(),
+        total,
+        'new'
+      ]
+    );
+
+    const orderId = orderResult.rows[0].id;
+
+    // Сохранение товаров заказа
+    for (const item of orderItems) {
+      await client.query(
+        `INSERT INTO order_items
+          (order_id, product_id, quantity, price)
+         VALUES ($1, $2, $3, $4)`,
+        [orderId, item.id, item.quantity, item.price]
+      );
+    }
+
+    await client.query('COMMIT');
+
+    console.log(
+      `Создан заказ №${orderId}, сумма: ${total} ₽`
+    );
+
+    return res.status(201).json({
+      success: true,
+      message: 'Заказ успешно оформлен!',
+      orderId,
+      subtotal,
+      delivery,
+      total
+    });
+  } catch (error) {
+    if (client) {
+      await client.query('ROLLBACK').catch(console.error);
+    }
+
+    next(error);
+  } finally {
+    if (client) {
+      client.release();
     }
   }
-
-  // Сервер самостоятельно рассчитывает сумму заказа
-  const subtotal = orderItems.reduce(
-    (sum, item) => sum + item.price * item.quantity,
-    0
-  );
-
-  const delivery =
-    deliveryMethod === 'pickup' || subtotal >= 8000
-      ? 0
-      : 500;
-
-  const total = subtotal + delivery;
-
-  const order = {
-    id: nextOrderId++,
-    name: name.trim(),
-    phone: phone.trim(),
-    email: email.trim(),
-    deliveryMethod,
-    address:
-      deliveryMethod === 'pickup' ? '' : address.trim(),
-    items: orderItems,
-    subtotal,
-    delivery,
-    total,
-    status: 'new',
-    createdAt: new Date().toISOString()
-  };
-
-  orders.push(order);
-
-  console.log(
-    `Создан заказ №${order.id}, сумма: ${order.total} ₽`
-  );
-
-  return res.status(201).json({
-    success: true,
-    message: 'Заказ успешно оформлен!',
-    orderId: order.id,
-    subtotal: order.subtotal,
-    delivery: order.delivery,
-    total: order.total
-  });
 });
 
-// Количество заказов — учебная проверка
-app.get('/api/orders/count', (req, res) => {
-  res.json({
-    count: orders.length
-  });
+// Количество заказов
+app.get('/api/orders/count', async (req, res, next) => {
+  try {
+    const result = await pool.query(
+      'SELECT COUNT(*)::int AS count FROM orders'
+    );
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    next(error);
+  }
 });
 
 // Создание обращения в поддержку
-app.post('/api/support', (req, res) => {
+app.post('/api/support', async (req, res, next) => {
   const data = req.body;
 
   if (!data || typeof data !== 'object' || Array.isArray(data)) {
@@ -264,37 +353,51 @@ app.post('/api/support', (req, res) => {
     });
   }
 
-  const supportRequest = {
-    id: nextSupportId++,
-    name: name.trim(),
-    email: email.trim(),
-    subject: subject.trim(),
-    message: message.trim(),
-    status: 'new',
-    createdAt: new Date().toISOString()
-  };
+  try {
+    // Названия столбцов соответствуют таблице PostgreSQL
+    const result = await pool.query(
+      `INSERT INTO support_requests
+        (customer_name, customer_email, subject, message)
+       VALUES ($1, $2, $3, $4)
+       RETURNING id`,
+      [
+        name.trim(),
+        email.trim(),
+        subject.trim(),
+        message.trim()
+      ]
+    );
 
-  supportRequests.push(supportRequest);
+    const requestId = result.rows[0].id;
 
-  console.log(
-    `Получено обращение в поддержку №${supportRequest.id}`
-  );
+    console.log(
+      `Получено обращение в поддержку №${requestId}`
+    );
 
-  return res.status(201).json({
-    success: true,
-    message: 'Ваше обращение успешно отправлено!',
-    requestId: supportRequest.id
-  });
+    return res.status(201).json({
+      success: true,
+      message: 'Ваше обращение успешно отправлено!',
+      requestId
+    });
+  } catch (error) {
+    next(error);
+  }
 });
 
-// Количество обращений — учебная проверка
-app.get('/api/support/count', (req, res) => {
-  res.json({
-    count: supportRequests.length
-  });
+// Количество обращений
+app.get('/api/support/count', async (req, res, next) => {
+  try {
+    const result = await pool.query(
+      'SELECT COUNT(*)::int AS count FROM support_requests'
+    );
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    next(error);
+  }
 });
 
-// Неизвестные маршруты API
+// Неизвестные API-маршруты
 app.use('/api', (req, res) => {
   res.status(404).json({
     message: 'API-маршрут не найден.'
@@ -303,7 +406,7 @@ app.use('/api', (req, res) => {
 
 // Обработка ошибок
 app.use((err, req, res, next) => {
-  console.error('Ошибка сервера:', err.message);
+  console.error('Ошибка сервера:', err);
 
   res.status(err.status || 500).json({
     message:
@@ -313,6 +416,7 @@ app.use((err, req, res, next) => {
   });
 });
 
+// Запуск сервера
 app.listen(PORT, () => {
   console.log(
     `Сервер TechMarket запущен: http://localhost:${PORT}`
