@@ -23,6 +23,123 @@ function formatProduct(row) {
   };
 }
 
+// Проверка данных заказа
+function validateOrder(data) {
+  if (!data || typeof data !== 'object' || Array.isArray(data)) {
+    return 'Некорректные данные заказа.';
+  }
+
+  const {
+    name,
+    phone,
+    email,
+    deliveryMethod,
+    address,
+    items
+  } = data;
+
+  if (
+    typeof name !== 'string' ||
+    !/^[A-Za-zА-Яа-яЁё\s-]{2,}$/.test(name.trim())
+  ) {
+    return 'Введите корректное имя.';
+  }
+
+  if (
+    typeof phone !== 'string' ||
+    !/^\d{10,15}$/.test(phone.replace(/\D/g, ''))
+  ) {
+    return 'Введите корректный номер телефона.';
+  }
+
+  if (
+    typeof email !== 'string' ||
+    !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())
+  ) {
+    return 'Введите корректный E-mail.';
+  }
+
+  if (!['delivery', 'pickup'].includes(deliveryMethod)) {
+    return 'Выберите способ получения заказа.';
+  }
+
+  if (
+    deliveryMethod === 'delivery' &&
+    (typeof address !== 'string' || address.trim().length < 5)
+  ) {
+    return 'Введите адрес доставки.';
+  }
+
+  if (!Array.isArray(items) || items.length === 0) {
+    return 'Корзина пуста.';
+  }
+
+  return null;
+}
+
+// Проверка данных обращения в поддержку
+function validateSupport(data) {
+  if (!data || typeof data !== 'object' || Array.isArray(data)) {
+    return 'Некорректные данные обращения.';
+  }
+
+  const { name, email, subject, message } = data;
+
+  if (
+    typeof name !== 'string' ||
+    !/^[A-Za-zА-Яа-яЁё]+(?:[ -][A-Za-zА-Яа-яЁё]+)*$/.test(name.trim()) ||
+    name.trim().replace(/[^A-Za-zА-Яа-яЁё]/g, '').length < 2
+  ) {
+    return 'Введите корректное имя (минимум 2 буквы).';
+  }
+
+  if (
+    typeof email !== 'string' ||
+    !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())
+  ) {
+    return 'Введите корректный E-mail.';
+  }
+
+  if (
+    typeof subject !== 'string' ||
+    subject.trim().length < 3 ||
+    subject.trim().length > 200
+  ) {
+    return 'Тема обращения должна содержать от 3 до 200 символов.';
+  }
+
+  if (
+    typeof message !== 'string' ||
+    message.trim().length < 10 ||
+    message.trim().length > 5000
+  ) {
+    return 'Сообщение должно содержать от 10 до 5000 символов.';
+  }
+
+  return null;
+}
+
+// Расчёт стоимости заказа
+function calculateOrderTotals(orderItems, deliveryMethod) {
+  const subtotal = orderItems.reduce(
+    (sum, item) => sum + item.price * item.quantity,
+    0
+  );
+
+  const delivery =
+    deliveryMethod === 'pickup' || subtotal >= 8000
+      ? 0
+      : 500;
+
+  const total = subtotal + delivery;
+
+  return {
+    subtotal,
+    delivery,
+    total
+  };
+}
+
 // Проверка сервера
 app.get('/', (req, res) => {
   res.send('Сервер TechMarket работает!');
@@ -97,9 +214,11 @@ app.get('/api/products/:id', async (req, res, next) => {
 app.post('/api/orders', async (req, res, next) => {
   const data = req.body;
 
-  if (!data || typeof data !== 'object' || Array.isArray(data)) {
+  const validationError = validateOrder(data);
+
+  if (validationError) {
     return res.status(400).json({
-      message: 'Некорректные данные заказа.'
+      message: validationError
     });
   }
 
@@ -108,57 +227,8 @@ app.post('/api/orders', async (req, res, next) => {
     phone,
     email,
     deliveryMethod,
-    address,
     items
   } = data;
-
-  if (
-    typeof name !== 'string' ||
-    !/^[A-Za-zА-Яа-яЁё\s-]{2,}$/.test(name.trim())
-  ) {
-    return res.status(400).json({
-      message: 'Введите корректное имя.'
-    });
-  }
-
-  if (
-    typeof phone !== 'string' ||
-    !/^\d{10,15}$/.test(phone.replace(/\D/g, ''))
-  ) {
-    return res.status(400).json({
-      message: 'Введите корректный номер телефона.'
-    });
-  }
-
-  if (
-    typeof email !== 'string' ||
-    !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())
-  ) {
-    return res.status(400).json({
-      message: 'Введите корректный E-mail.'
-    });
-  }
-
-  if (!['delivery', 'pickup'].includes(deliveryMethod)) {
-    return res.status(400).json({
-      message: 'Выберите способ получения заказа.'
-    });
-  }
-
-  if (
-    deliveryMethod === 'delivery' &&
-    (typeof address !== 'string' || address.trim().length < 5)
-  ) {
-    return res.status(400).json({
-      message: 'Введите адрес доставки.'
-    });
-  }
-
-  if (!Array.isArray(items) || items.length === 0) {
-    return res.status(400).json({
-      message: 'Корзина пуста.'
-    });
-  }
 
   let client;
 
@@ -223,17 +293,11 @@ app.post('/api/orders', async (req, res, next) => {
     }
 
     // Сервер самостоятельно рассчитывает стоимость
-    const subtotal = orderItems.reduce(
-      (sum, item) => sum + item.price * item.quantity,
-      0
-    );
-
-    const delivery =
-      deliveryMethod === 'pickup' || subtotal >= 8000
-        ? 0
-        : 500;
-
-    const total = subtotal + delivery;
+    const {
+      subtotal,
+      delivery,
+      total
+    } = calculateOrderTotals(orderItems, deliveryMethod);
 
     // Сохранение заказа
     const orderResult = await client.query(
@@ -306,52 +370,20 @@ app.get('/api/orders/count', async (req, res, next) => {
 app.post('/api/support', async (req, res, next) => {
   const data = req.body;
 
-  if (!data || typeof data !== 'object' || Array.isArray(data)) {
+  const validationError = validateSupport(data);
+
+  if (validationError) {
     return res.status(400).json({
-      message: 'Некорректные данные обращения.'
+      message: validationError
     });
   }
 
-  const { name, email, subject, message } = data;
-
-  if (
-    typeof name !== 'string' ||
-    !/^[A-Za-zА-Яа-яЁё]+(?:[ -][A-Za-zА-Яа-яЁё]+)*$/.test(name.trim()) ||
-    name.trim().replace(/[^A-Za-zА-Яа-яЁё]/g, '').length < 2
-  ) {
-    return res.status(400).json({
-      message: 'Введите корректное имя (минимум 2 буквы).'
-    });
-  }
-
-  if (
-    typeof email !== 'string' ||
-    !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())
-  ) {
-    return res.status(400).json({
-      message: 'Введите корректный E-mail.'
-    });
-  }
-
-  if (
-    typeof subject !== 'string' ||
-    subject.trim().length < 3 ||
-    subject.trim().length > 200
-  ) {
-    return res.status(400).json({
-      message: 'Тема обращения должна содержать от 3 до 200 символов.'
-    });
-  }
-
-  if (
-    typeof message !== 'string' ||
-    message.trim().length < 10 ||
-    message.trim().length > 5000
-  ) {
-    return res.status(400).json({
-      message: 'Сообщение должно содержать от 10 до 5000 символов.'
-    });
-  }
+  const {
+    name,
+    email,
+    subject,
+    message
+  } = data;
 
   try {
     // Названия столбцов соответствуют таблице PostgreSQL
@@ -417,8 +449,17 @@ app.use((err, req, res, next) => {
 });
 
 // Запуск сервера
-app.listen(PORT, () => {
-  console.log(
-    `Сервер TechMarket запущен: http://localhost:${PORT}`
-  );
-});
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(
+      `Сервер TechMarket запущен: http://localhost:${PORT}`
+    );
+  });
+}
+
+// Экспорт функций для unit-тестов
+module.exports = {
+  validateOrder,
+  validateSupport,
+  calculateOrderTotals
+};
